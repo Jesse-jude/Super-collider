@@ -3,497 +3,204 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Supercollider</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>AI Supercollider Terminal</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:#030810;color:#7af0ff;font-family:'Share Tech Mono',monospace}
-body{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;min-height:100vh}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+        background: #02060c; 
+        color: #7af0ff; 
+        font-family: 'Share Tech Mono', monospace; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        min-height: 100vh; 
+        padding: 20px;
+    }
+    .shell { 
+        width: 100%; 
+        max-width: 1100px; 
+        background: #050a12; 
+        border: 1px solid #0f2a3f; 
+        border-radius: 8px; 
+        overflow: hidden; 
+        display: flex; 
+        flex-direction: column; 
+    }
+    .top-bar { 
+        background: #0a192f; 
+        padding: 10px 20px; 
+        display: flex; 
+        align-items: center; 
+        border-bottom: 1px solid #0f2a3f; 
+    }
+    .logo { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 2px; color: #00d4ff; }
+    .status { margin-left: auto; font-size: 10px; color: #4a8fa0; }
 
-.shell{width:100%;max-width:1100px;background:#050a12;border-radius:12px;border:1px solid #0f2a3f;overflow:hidden}
+    .main-grid { display: grid; grid-template-columns: 260px 1fr 260px; min-height: 600px; }
+    .panel { padding: 15px; border-right: 1px solid #0f2a3f; display: flex; flex-direction: column; gap: 15px; }
+    .right-panel { border-right: none; border-left: 1px solid #0f2a3f; }
 
-.top-bar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:#071520;border-bottom:1px solid #0f3050}
-.logo{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#00d4ff;letter-spacing:2px}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.status-label{font-size:10px;color:#4a8fa0;letter-spacing:1px;margin-left:auto}
-.api-pill{background:#001a3a;border:1px solid #0050aa;border-radius:4px;padding:2px 8px;font-size:9px;color:#5588ff;margin-left:8px;display:none;} /* Hidden API Pill */
+    /* Controls */
+    .card { background: #071a2e; border: 1px solid #14375a; padding: 12px; border-radius: 4px; }
+    .label { font-size: 10px; color: #4a8fa0; margin-bottom: 5px; display: block; }
+    select, input[type=range] { width: 100%; margin-top: 5px; background: #02060c; color: #00d4ff; border: 1px solid #0f2a3f; padding: 5px; }
 
-.main-grid{display:grid;grid-template-columns:240px 1fr 240px;min-height:640px}
-.panel{padding:16px;border-right:1px solid #0f2a3f;display:flex;flex-direction:column;gap:12px}
-.panel:last-child{border-right:none;border-left:1px solid #0f2a3f}
-.panel-title{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;color:#2a7a9a;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid #0f2a3f}
+    /* The Button */
+    .collide-btn { 
+        background: linear-gradient(180deg, #005a9e 0%, #003a6e 100%);
+        border: 1px solid #00d4ff; 
+        color: #fff; 
+        font-family: 'Orbitron', sans-serif; 
+        padding: 15px; 
+        cursor: pointer; 
+        font-weight: bold;
+        letter-spacing: 2px;
+        transition: 0.2s;
+        margin-top: auto;
+    }
+    .collide-btn:hover { background: #007ace; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
+    .collide-btn:active { transform: scale(0.98); }
 
-.particle-card{background:#071a2e;border:1px solid #0f3050;border-radius:6px;padding:10px}
-.pc-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.pc-symbol{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;font-family:'Orbitron',sans-serif}
-.sym-a{background:#1a3a6e;border:1px solid #2a6aff;color:#6ab0ff}
-.sym-b{background:#5a1a1a;border:1px solid #ff3a3a;color:#ff8888}
-.pc-name{font-size:11px;color:#a0d0e0}
-.pc-type{font-size:9px;color:#2a7a9a}
+    /* Canvas */
+    .viewport { position: relative; background: #010409; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    canvas { width: 100%; height: 100%; }
 
-.param-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.param-label{font-size:9px;color:#2a7a9a}
-.param-val{font-size:10px;color:#00d4ff}
+    /* Stats */
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-box { background: #0a192f; padding: 10px; border: 1px solid #0f2a3f; text-align: center; }
+    .stat-val { font-size: 18px; color: #00ff88; font-family: 'Orbitron'; display: block; }
+    .stat-lab { font-size: 9px; color: #4a8fa0; }
 
-select,input[type=range]{width:100%;background:#071a2e;border:1px solid #0f3050;color:#7af0ff;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 6px;border-radius:4px;outline:none;cursor:pointer}
-input[type=range]{-webkit-appearance:none;height:3px;background:#0f2a3f;border:none;padding:0;margin:4px 0}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#00d4ff;cursor:pointer}
-
-.mode-toggle{display:flex;gap:4px;margin-bottom:4px}
-.mode-btn{flex:1;background:#071a2e;border:1px solid #0f3050;color:#2a7a9a;font-family:'Share Tech Mono',monospace;font-size:9px;padding:5px;border-radius:4px;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:1px}
-.mode-btn.active{background:#001a3a;border-color:#0080ff;color:#00d4ff}
-
-.collide-btn{width:100%;background:linear-gradient(135deg,#003a6e,#005a9e);border:1px solid #0080ff;color:#00d4ff;font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;padding:10px;border-radius:6px;cursor:pointer;transition:all .2s;text-transform:uppercase;margin-top:auto}
-.collide-btn:hover{background:linear-gradient(135deg,#004a8e,#007ace);border-color:#00aaff}
-.collide-btn:active{transform:scale(.97)}
-.collide-btn.running{animation:pulse-btn .5s infinite alternate;background:linear-gradient(135deg,#003a1e,#005a3e);border-color:#00ff88;color:#00ff88}
-@keyframes pulse-btn{from{box-shadow:0 0 0 0 #00ff8840}to{box-shadow:0 0 12px 4px #00ff8840}}
-
-.canvas-wrap{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#030810;overflow:hidden}
-#colliderCanvas{display:block}
-
-.energy-bar-wrap{position:absolute;bottom:12px;left:20px;right:20px}
-.energy-label{font-size:9px;color:#2a7a9a;letter-spacing:1px;margin-bottom:3px}
-.energy-bar{height:4px;background:#0f2a3f;border-radius:2px;overflow:hidden}
-.energy-fill{height:100%;width:0%;background:linear-gradient(90deg,#0040ff,#00d4ff,#00ff88);border-radius:2px;transition:width .3s}
-
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.stat-box{background:#071a2e;border:1px solid #0f3050;border-radius:4px;padding:8px;text-align:center}
-.stat-val{font-family:'Orbitron',sans-serif;font-size:14px;color:#00d4ff;display:block}
-.stat-lbl{font-size:8px;color:#2a7a9a;text-transform:uppercase;letter-spacing:1px}
-
-.output-section{display:flex;flex-direction:column;gap:8px;flex:1;overflow-y:auto;max-height:320px}
-.output-section::-webkit-scrollbar{width:3px}
-.output-section::-webkit-scrollbar-thumb{background:#0f3050;border-radius:2px}
-.out-title{font-size:9px;color:#2a7a9a;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #0f2a3f;padding-bottom:6px;position:sticky;top:0;background:#050a12;z-index:1}
-
-.particle-result{background:#071a2e;border:1px solid #0f3050;border-radius:4px;padding:8px;animation:fadeIn .3s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-.pr-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.pr-name{font-size:11px;color:#a0d0e0}
-.pr-energy{font-size:10px;color:#00ff88}
-.pr-bar{height:2px;background:#0f2a3f;border-radius:1px;overflow:hidden;margin-bottom:2px}
-.pr-fill{height:100%;border-radius:1px}
-.pr-meta{font-size:9px;color:#2a7a9a}
-.prob-badge{display:inline-block;background:#001a3a;border:1px solid #0050aa;border-radius:3px;padding:1px 5px;font-size:9px;color:#5588ff;margin-left:4px}
-.anom-badge{background:#1a0000;border-color:#ff3030;color:#ff5050}
-
-.anomaly-alert{background:#1a0a0a;border:1px solid #ff3030;border-radius:4px;padding:8px;font-size:10px;color:#ff6060;display:none;animation:fadeIn .3s ease}
-
-.log-section{background:#020810;border:1px solid #0f2a3f;border-radius:4px;padding:8px;font-size:9px;color:#2a7a9a;max-height:100px;overflow-y:auto;flex-shrink:0}
-.log-section::-webkit-scrollbar{width:3px}
-.log-section::-webkit-scrollbar-thumb{background:#0f3050;border-radius:2px}
-.log-line{margin-bottom:2px;line-height:1.4}
-.log-line.ok{color:#00ff88}
-.log-line.warn{color:#ffaa00}
-.log-line.err{color:#ff4040}
-
-@media(max-width:800px){
-  .main-grid{grid-template-columns:1fr}
-  .panel:last-child{border-left:none;border-top:1px solid #0f2a3f}
-}
+    .log { height: 120px; background: #02060c; border: 1px solid #0f2a3f; padding: 10px; font-size: 10px; overflow-y: auto; color: #2a7a9a; }
 </style>
 </head>
 <body>
 
 <div class="shell">
-  <div class="top-bar">
-    <div class="status-dot"></div>
-    <div class="logo">AI SUPERCOLLIDER</div>
-    <div class="status-label" id="statusLabel">SYSTEMS NOMINAL</div>
-  </div>
-
-  <div class="main-grid">
-    <div class="panel">
-      <div class="panel-title">Beam Configuration</div>
-      <div class="particle-card">
-        <div class="pc-header">
-          <div class="pc-symbol sym-a" id="symA">p</div>
-          <div><div class="pc-name">Beam A</div><div class="pc-type" id="typeA">Baryon · Fermion</div></div>
-        </div>
-        <div class="param-row"><span class="param-label">PARTICLE</span></div>
-        <select id="particleA" onchange="updateParticle('A')">
-          <option value="proton">Proton (p)</option>
-          <option value="electron">Electron (e⁻)</option>
-          <option value="antiproton">Antiproton (p̄)</option>
-          <option value="neutron">Neutron (n)</option>
-          <option value="muon">Muon (μ⁻)</option>
-        </select>
-        <div class="param-row" style="margin-top:8px">
-          <span class="param-label">ENERGY (TeV)</span>
-          <span class="param-val" id="energyAVal">6.5</span>
-        </div>
-        <input type="range" min="0.5" max="14" step="0.5" value="6.5" id="energyA" oninput="updateSlider()">
-        <div class="param-row">
-          <span class="param-label">ANGLE (°)</span>
-          <span class="param-val" id="angleAVal">0°</span>
-        </div>
-        <input type="range" min="-15" max="15" step="1" value="0" id="angleA" oninput="updateAngle('A')">
-      </div>
-
-      <div class="particle-card">
-        <div class="pc-header">
-          <div class="pc-symbol sym-b" id="symB">p̄</div>
-          <div><div class="pc-name">Beam B</div><div class="pc-type" id="typeB">Antibaryon · Fermion</div></div>
-        </div>
-        <div class="param-row"><span class="param-label">PARTICLE</span></div>
-        <select id="particleB" onchange="updateParticle('B')">
-          <option value="antiproton" selected>Antiproton (p̄)</option>
-          <option value="proton">Proton (p)</option>
-          <option value="positron">Positron (e⁺)</option>
-          <option value="neutron">Neutron (n)</option>
-          <option value="antimuon">Antimuon (μ⁺)</option>
-        </select>
-        <div class="param-row" style="margin-top:8px">
-          <span class="param-label">ENERGY (TeV)</span>
-          <span class="param-val" id="energyBVal">6.5</span>
-        </div>
-        <input type="range" min="0.5" max="14" step="0.5" value="6.5" id="energyB" oninput="updateSlider()">
-        <div class="param-row">
-          <span class="param-label">ANGLE (°)</span>
-          <span class="param-val" id="angleBVal">180°</span>
-        </div>
-        <input type="range" min="165" max="195" step="1" value="180" id="angleB" oninput="updateAngle('B')">
-      </div>
-
-      <div class="mode-toggle">
-        <div class="mode-btn active" id="modePhys" onclick="setMode('physics')">PHYSICS</div>
-        <div class="mode-btn" id="modeAI" onclick="setMode('ai')">AI MODEL</div>
-      </div>
-
-      <button class="collide-btn" id="collideBtn" onclick="fireCollision()">⚡ COLLIDE</button>
+    <div class="top-bar">
+        <div class="logo">S-COLLIDER v2.4</div>
+        <div class="status" id="status">SYS_READY</div>
     </div>
+    
+    <div class="main-grid">
+        <div class="panel">
+            <div class="card">
+                <span class="label">BEAM A PARTICLE</span>
+                <select id="pA">
+                    <option value="proton">Proton (p+)</option>
+                    <option value="electron">Electron (e-)</option>
+                </select>
+                <span class="label" style="margin-top:10px">ENERGY (TeV)</span>
+                <input type="range" id="eA" min="1" max="14" value="7">
+            </div>
 
-    <div class="canvas-wrap">
-      <canvas id="colliderCanvas" width="520" height="560"></canvas>
-      <div class="energy-bar-wrap">
-        <div class="energy-label">COLLISION ENERGY</div>
-        <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
-      </div>
-    </div>
+            <div class="card">
+                <span class="label">BEAM B PARTICLE</span>
+                <select id="pB">
+                    <option value="antiproton">Antiproton (p-)</option>
+                    <option value="positron">Positron (e+)</option>
+                </select>
+                <span class="label" style="margin-top:10px">ENERGY (TeV)</span>
+                <input type="range" id="eB" min="1" max="14" value="7">
+            </div>
 
-    <div class="panel">
-      <div class="panel-title">Collision Output</div>
-      <div class="stats-grid">
-        <div class="stat-box"><span class="stat-val" id="totalEvents">0</span><span class="stat-lbl">Events</span></div>
-        <div class="stat-box"><span class="stat-val" id="totalParticles">0</span><span class="stat-lbl">Particles</span></div>
-        <div class="stat-box"><span class="stat-val" id="sqrtS">13.0</span><span class="stat-lbl">√s (TeV)</span></div>
-        <div class="stat-box"><span class="stat-val" id="anomCount">0</span><span class="stat-lbl">Anomalies</span></div>
-      </div>
-      <div class="anomaly-alert" id="anomalyAlert">⚠ ANOMALOUS EVENT — unexpected particle signature</div>
-      <div class="output-section" id="outputSection">
-        <div class="out-title">Resulting Particles</div>
-        <div style="font-size:10px;color:#2a7a9a;padding:8px 0">Fire a collision to see output</div>
-      </div>
-      <div class="log-section" id="logSection">
-        <div class="log-line">&gt; System online</div>
-        <div class="log-line">&gt; Standby for collision</div>
-      </div>
+            <button class="collide-btn" onclick="startCollision()">⚡ COLLIDE</button>
+        </div>
+
+        <div class="viewport">
+            <canvas id="cvs"></canvas>
+        </div>
+
+        <div class="panel right-panel">
+            <div class="stat-row">
+                <div class="stat-box"><span class="stat-val" id="evCount">0</span><span class="stat-lab">EVENTS</span></div>
+                <div class="stat-box"><span class="stat-val" id="lumi">0.0</span><span class="stat-lab">LUMI</span></div>
+            </div>
+            <div class="log" id="log">> Initializing injectors...<br>> Magnet alignment OK.</div>
+        </div>
     </div>
-  </div>
 </div>
 
 <script>
-const PDATA = {
-  proton:     {sym:'p',  color:'#2a6aff',fill:'#1a3a6e', type:'Baryon · Fermion'},
-  electron:   {sym:'e⁻',color:'#aa3aff',fill:'#3a1a6e', type:'Lepton · Fermion'},
-  antiproton: {sym:'p̄', color:'#ff3a3a',fill:'#5a1a1a', type:'Antibaryon · Fermion'},
-  neutron:    {sym:'n',  color:'#44aaff',fill:'#0a2a4a', type:'Baryon · Fermion'},
-  muon:       {sym:'μ⁻',color:'#ffaa00',fill:'#3a2800', type:'Lepton · Fermion'},
-  positron:   {sym:'e⁺',color:'#ff66cc',fill:'#3a1a3a', type:'Antilepton · Fermion'},
-  antimuon:   {sym:'μ⁺',color:'#ff8800',fill:'#3a1a00', type:'Antilepton · Fermion'},
-};
+    const canvas = document.getElementById('cvs');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let animating = false;
 
-const PARTICLE_COLORS = {
-  W_plus:'#2a6aff',W_minus:'#ff4040',Z_boson:'#00cc88',Higgs:'#ffcc00',
-  photon:'#ffffa0',gluon:'#ff9900',pion_plus:'#4488ff',pion_minus:'#ff6688',
-  pion_zero:'#8899ff',kaon_plus:'#44dd88',kaon_minus:'#dd4488',
-  top_quark:'#ff8800',bottom_quark:'#aa44ff',neutrino:'#aaaaff',
-  muon:'#ffaa00',electron:'#aa3aff',proton:'#2a6aff',antiproton:'#ff3a3a',
-};
-
-let state = {mode:'physics',events:0,totalParticles:0,anomalies:0,running:false};
-let animFrame=null, resultParticles=[], beamA=[], beamB=[], colFlash=0;
-
-const canvas=document.getElementById('colliderCanvas');
-const ctx=canvas.getContext('2d');
-const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
-
-function rand(a,b){return a+Math.random()*(b-a)}
-function choice(arr){return arr[Math.floor(Math.random()*arr.length)]}
-
-function updateSlider(){
-  const eA=parseFloat(document.getElementById('energyA').value);
-  const eB=parseFloat(document.getElementById('energyB').value);
-  document.getElementById('energyAVal').textContent=eA.toFixed(1);
-  document.getElementById('energyBVal').textContent=eB.toFixed(1);
-  const s=(2*Math.sqrt(eA*eB)).toFixed(1);
-  document.getElementById('sqrtS').textContent=s;
-  document.getElementById('energyFill').style.width=Math.min(100,(eA+eB)/28*100).toFixed(0)+'%';
-}
-
-function updateAngle(beam){
-  const v=parseInt(document.getElementById('angle'+beam).value);
-  document.getElementById('angle'+beam+'Val').textContent=v+'°';
-}
-
-function updateParticle(beam){
-  const n=document.getElementById('particle'+beam).value;
-  const p=PDATA[n]; if(!p) return;
-  const sym=document.getElementById('sym'+beam);
-  sym.textContent=p.sym;
-  sym.style.background=p.fill;
-  sym.style.borderColor=p.color;
-  sym.style.color=p.color;
-  document.getElementById('type'+beam).textContent=p.type;
-}
-
-function setMode(m){
-  state.mode=m;
-  document.getElementById('modePhys').className='mode-btn'+(m==='physics'?' active':'');
-  document.getElementById('modeAI').className='mode-btn'+(m==='ai'?' active':'');
-}
-
-function drawBg(){
-  ctx.fillStyle='#030810';ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(0,80,150,0.25)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.arc(cx,cy,200,0,Math.PI*2);ctx.stroke();
-  ctx.strokeStyle='rgba(0,80,150,0.12)';ctx.lineWidth=0.5;
-  ctx.beginPath();ctx.arc(cx,cy,180,0,Math.PI*2);ctx.stroke();
-  ctx.beginPath();ctx.arc(cx,cy,220,0,Math.PI*2);ctx.stroke();
-  ctx.strokeStyle='rgba(0,60,100,0.15)';ctx.lineWidth=0.5;
-  for(let i=40;i<W;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke()}
-  for(let i=40;i<H;i+=40){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke()}
-  for(let i=0;i<8;i++){
-    const a=(i/8)*Math.PI*2,r1=195,r2=225;
-    ctx.strokeStyle='rgba(0,100,180,0.4)';ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
-    ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);ctx.stroke();
-  }
-}
-
-function drawBeams(){
-  const eA=parseFloat(document.getElementById('energyA').value);
-  const eB=parseFloat(document.getElementById('energyB').value);
-  const aA=parseInt(document.getElementById('angleA').value)*Math.PI/180;
-  const aB=parseInt(document.getElementById('angleB').value)*Math.PI/180;
-  const cA=PDATA[document.getElementById('particleA').value]?.color||'#2a6aff';
-  const cB=PDATA[document.getElementById('particleB').value]?.color||'#ff3a3a';
-
-  const gA=ctx.createLinearGradient(cx-220,cy,cx,cy);
-  gA.addColorStop(0,'transparent');gA.addColorStop(1,cA);
-  ctx.save();ctx.globalAlpha=0.3;ctx.strokeStyle=gA;ctx.lineWidth=Math.min(4,1+eA/4);
-  ctx.beginPath();ctx.moveTo(cx-Math.cos(aA)*220,cy-Math.sin(aA)*220);ctx.lineTo(cx,cy);ctx.stroke();ctx.restore();
-
-  const gB=ctx.createLinearGradient(cx+220,cy,cx,cy);
-  gB.addColorStop(0,'transparent');gB.addColorStop(1,cB);
-  ctx.save();ctx.globalAlpha=0.3;ctx.strokeStyle=gB;ctx.lineWidth=Math.min(4,1+eB/4);
-  ctx.beginPath();ctx.moveTo(cx-Math.cos(aB)*220,cy-Math.sin(aB)*220);ctx.lineTo(cx,cy);ctx.stroke();ctx.restore();
-}
-
-function spawnBeam(beam){
-  const eVal=parseFloat(document.getElementById('energy'+beam).value);
-  const ang=parseInt(document.getElementById('angle'+beam).value)*Math.PI/180;
-  const n=document.getElementById('particle'+beam).value;
-  const color=PDATA[n]?.color||'#2a6aff';
-  const speed=1.8+eVal/7;
-  return {x:cx-Math.cos(ang)*220,y:cy-Math.sin(ang)*220,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,color,size:2.5+eVal/7,alpha:1};
-}
-
-// Generate some random simulated particle data
-function mockGenerateParticles(energy) {
-    const particleTypes = [
-        {name: 'photon', spin: 1, charge: 0, mass_gev: 0},
-        {name: 'electron', spin: 0.5, charge: -1, mass_gev: 0.0005},
-        {name: 'positron', spin: 0.5, charge: 1, mass_gev: 0.0005},
-        {name: 'muon', spin: 0.5, charge: -1, mass_gev: 0.105},
-        {name: 'pion_plus', spin: 0, charge: 1, mass_gev: 0.139},
-        {name: 'pion_minus', spin: 0, charge: -1, mass_gev: 0.139},
-        {name: 'Higgs', spin: 0, charge: 0, mass_gev: 125.1},
-        {name: 'Z_boson', spin: 1, charge: 0, mass_gev: 91.2}
-    ];
-    
-    let count = Math.floor(rand(3, 8 + (energy * 0.5)));
-    let output = [];
-    for(let i=0; i<count; i++){
-        let pType = choice(particleTypes);
-        output.push({
-            name: pType.name,
-            energy_tev: rand(0.1, energy * 0.4),
-            spin: pType.spin,
-            charge: pType.charge,
-            mass_gev: pType.mass_gev
-        });
+    function resize() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
     }
-    return output;
-}
+    window.addEventListener('resize', resize);
+    resize();
 
-async function fireCollision(){
-  if(state.running) return;
-  state.running=true;
-  document.getElementById('collideBtn').className='collide-btn running';
-  document.getElementById('collideBtn').textContent='◉ COLLIDING...';
-  document.getElementById('statusLabel').textContent='SIMULATING...';
-  if(animFrame) cancelAnimationFrame(animFrame);
-  beamA=[];beamB=[];resultParticles=[];
-
-  const eA=parseFloat(document.getElementById('energyA').value);
-  const eB=parseFloat(document.getElementById('energyB').value);
-  const pA=document.getElementById('particleA').value;
-  const pB=document.getElementById('particleB').value;
-  const angA=parseInt(document.getElementById('angleA').value);
-  const angB=parseInt(document.getElementById('angleB').value);
-
-  let phase=0,phaseT=0,apiData=null;
-  colFlash=0;
-
-  // Mock API Call
-  const apiPromise = new Promise(resolve => {
-    setTimeout(() => {
-      resolve({
-        particles: mockGenerateParticles(eA + eB),
-        confidence: state.mode === 'ai' ? rand(0.85, 0.99) : null,
-        anomaly_detected: Math.random() > 0.85,
-        anomaly_sigma: rand(3.1, 5.5).toFixed(1),
-        sqrt_s_tev: (2*Math.sqrt(eA*eB)),
-        n_particles: Math.floor(rand(3, 12)),
-        beam_a: pA,
-        beam_b: pB
-      });
-    }, 800);
-  }).then(d => { apiData = d });
-
-  function animate(){
-    drawBg();drawBeams();phaseT++;
-    if(phase===0){
-      if(phaseT%4===0){beamA.push(spawnBeam('A'));beamB.push(spawnBeam('B'))}
-      [...beamA,...beamB].forEach(p=>{p.x+=p.vx;p.y+=p.vy});
-      [...beamA,...beamB].forEach(p=>{
-        const d=Math.hypot(p.x-cx,p.y-cy);
-        p.alpha=Math.min(1,d/40);
-        ctx.save();ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;
-        ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
-        const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*3);
-        g.addColorStop(0,p.color+'60');g.addColorStop(1,'transparent');
-        ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,p.size*3,0,Math.PI*2);ctx.fill();
-        ctx.restore();
-      });
-      if(phaseT>60){phase=1;phaseT=0;colFlash=0}
-    } else if(phase===1){
-      colFlash=Math.min(1,colFlash+0.07);
-      ctx.save();ctx.globalAlpha=colFlash*0.6;
-      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,80*colFlash);
-      g.addColorStop(0,'#ffffff');g.addColorStop(0.3,'#00d4ff');g.addColorStop(1,'transparent');
-      ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,120*colFlash,0,Math.PI*2);ctx.fill();
-      ctx.restore();
-      if(phaseT>20){
-        phase=2;phaseT=0;
-        apiPromise.then(()=>{
-          if(apiData&&!apiData.error){
-            buildResultParticles(apiData);
-            displayResults(apiData);
-          } else {
-            log('API error — '+((apiData&&apiData.error)||'network fail'),'err');
-          }
-        });
-      }
-    } else if(phase===2){
-      let alive=0;
-      resultParticles.forEach(p=>{
-        p.x+=p.vx;p.y+=p.vy;p.life--;p.alpha=Math.max(0,p.life/120);
-        p.trail.push({x:p.x,y:p.y});if(p.trail.length>28)p.trail.shift();
-        if(p.alpha>0.01){
-          alive++;
-          ctx.save();
-          for(let i=1;i<p.trail.length;i++){
-            ctx.globalAlpha=(i/p.trail.length)*p.alpha*0.4;
-            ctx.strokeStyle=p.color;ctx.lineWidth=1;
-            ctx.beginPath();ctx.moveTo(p.trail[i-1].x,p.trail[i-1].y);ctx.lineTo(p.trail[i].x,p.trail[i].y);ctx.stroke();
-          }
-          ctx.restore();
-          ctx.save();ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;
-          ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill();ctx.restore();
+    function startCollision() {
+        if(animating) return;
+        animating = true;
+        document.getElementById('status').textContent = "COLLIDING...";
+        particles = [];
+        
+        // Generate collision fragments
+        const count = 20 + Math.random() * 30;
+        for(let i=0; i<count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 5;
+            particles.push({
+                x: canvas.width/2,
+                y: canvas.height/2,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.0,
+                color: `hsl(${180 + Math.random() * 60}, 100%, 70%)`
+            });
         }
-      });
-      if(alive===0||phaseT>500){phase=3;endCollision()}
+        
+        updateStats();
+        animate();
     }
-    if(phase<3) animFrame=requestAnimationFrame(animate);
-    else{drawBg();drawBeams()}
-  }
-  animFrame=requestAnimationFrame(animate);
-}
 
-function buildResultParticles(data){
-  resultParticles=[];
-  (data.particles||[]).forEach((p,i)=>{
-    const color=PARTICLE_COLORS[p.name]||'#7af0ff';
-    const speed=0.8+Math.random()*2.2;
-    const angle=Math.random()*Math.PI*2;
-    resultParticles.push({
-      x:cx,y:cy,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
-      color,alpha:1,trail:[],life:180+Math.random()*80
-    });
-  });
-}
+    function updateStats() {
+        const ev = document.getElementById('evCount');
+        ev.textContent = parseInt(ev.textContent) + 1;
+        const log = document.getElementById('log');
+        log.innerHTML += `<br>> Event detected: ${particles.length} tracks.`;
+        log.scrollTop = log.scrollHeight;
+    }
 
-function displayResults(data){
-  const sec=document.getElementById('outputSection');
-  const badge=state.mode==='ai'?'<span class="prob-badge">AI</span>':'<span class="prob-badge">PHYS</span>';
-  let html='<div class="out-title">Resulting Particles '+badge+'</div>';
-  const parts=data.particles||[];
-  const maxE=Math.max(...parts.map(p=>p.energy_tev||0),0.001);
-  parts.slice(0,12).forEach(p=>{
-    const pct=((p.energy_tev/maxE)*100).toFixed(0);
-    const color=PARTICLE_COLORS[p.name]||'#7af0ff';
-    const conf=data.confidence?` · conf ${(data.confidence*100).toFixed(0)}%`:'';
-    html+=`<div class="particle-result">
-      <div class="pr-header"><span class="pr-name">${p.name.replace('_',' ')}</span><span class="pr-energy">${p.energy_tev.toFixed(3)} TeV</span></div>
-      <div class="pr-bar"><div class="pr-fill" style="width:${pct}%;background:${color}"></div></div>
-      <div class="pr-meta">spin ${p.spin} · Q=${(p.charge>=0?'+':'')+p.charge.toFixed(2)} · ${p.mass_gev.toFixed(3)} GeV${conf}</div>
-    </div>`;
-  });
-  sec.innerHTML=html;
+    function animate() {
+        ctx.fillStyle = 'rgba(2, 6, 12, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const anom=document.getElementById('anomalyAlert');
-  if(data.anomaly_detected){
-    anom.style.display='block';
-    state.anomalies++;
-    document.getElementById('anomCount').textContent=state.anomalies;
-    log(`⚠ Anomaly σ=${data.anomaly_sigma} at √s=${data.sqrt_s_tev?.toFixed(2)} TeV`,'warn');
-  } else {
-    anom.style.display='none';
-  }
+        let alive = false;
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.015;
+            
+            if(p.life > 0) {
+                alive = true;
+                ctx.beginPath();
+                ctx.strokeStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.lineWidth = 2;
+                ctx.moveTo(p.x - p.vx, p.y - p.vy);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+            }
+        });
 
-  state.events++;
-  state.totalParticles+=(data.n_particles||0);
-  document.getElementById('totalEvents').textContent=state.events;
-  document.getElementById('totalParticles').textContent=state.totalParticles;
-  document.getElementById('sqrtS').textContent=(data.sqrt_s_tev||0).toFixed(2);
-  log(`Event #${state.events}: ${data.beam_a}+${data.beam_b} → ${data.n_particles} particles`,'ok');
-}
+        if(alive) {
+            requestAnimationFrame(animate);
+        } else {
+            animating = false;
+            document.getElementById('status').textContent = "SYS_READY";
+        }
+    }
 
-function endCollision(){
-  state.running=false;
-  document.getElementById('collideBtn').className='collide-btn';
-  document.getElementById('collideBtn').textContent='⚡ COLLIDE';
-  document.getElementById('statusLabel').textContent='SYSTEMS NOMINAL';
-}
-
-function log(msg,cls=''){
-  const sec=document.getElementById('logSection');
-  const div=document.createElement('div');
-  div.className='log-line '+cls;
-  div.textContent='> '+msg;
-  sec.appendChild(div);
-  sec.scrollTop=sec.scrollHeight;
-  while(sec.children.length>24)sec.removeChild(sec.firstChild);
-}
-
-drawBg();drawBeams();updateSlider();
-(function idle(){drawBg();drawBeams();if(!state.running)requestAnimationFrame(idle)})();
+    // Initial background draw
+    ctx.fillStyle = '#02060c';
+    ctx.fillRect(0,0,canvas.width, canvas.height);
 </script>
 </body>
-</html>
 </html>
