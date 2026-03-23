@@ -18,7 +18,7 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:flex-
 .status-dot{width:8px;height:8px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .status-label{font-size:10px;color:#4a8fa0;letter-spacing:1px;margin-left:auto}
-.api-pill{background:#001a3a;border:1px solid #0050aa;border-radius:4px;padding:2px 8px;font-size:9px;color:#5588ff;margin-left:8px}
+.api-pill{background:#001a3a;border:1px solid #0050aa;border-radius:4px;padding:2px 8px;font-size:9px;color:#5588ff;margin-left:8px;display:none;} /* Hidden API Pill */
 
 .main-grid{display:grid;grid-template-columns:240px 1fr 240px;min-height:640px}
 .panel{padding:16px;border-right:1px solid #0f2a3f;display:flex;flex-direction:column;gap:12px}
@@ -90,20 +90,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 .log-line.warn{color:#ffaa00}
 .log-line.err{color:#ff4040}
 
-/* API docs section */
-.api-docs{margin-top:16px;width:100%;max-width:1100px;background:#050a12;border-radius:12px;border:1px solid #0f2a3f;padding:20px}
-.api-title{font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;color:#00d4ff;margin-bottom:16px}
-.endpoint-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.endpoint-card{background:#071a2e;border:1px solid #0f3050;border-radius:6px;padding:12px}
-.ep-method{display:inline-block;background:#001a3a;border:1px solid #0050aa;border-radius:3px;padding:2px 6px;font-size:9px;color:#5588ff;margin-bottom:6px}
-.ep-path{font-size:11px;color:#a0d0e0;margin-bottom:6px}
-.ep-desc{font-size:9px;color:#2a7a9a;line-height:1.5}
-.ep-example{margin-top:8px;background:#020810;border-radius:4px;padding:8px;font-size:8px;color:#4a8fa0;white-space:pre;overflow-x:auto}
-
 @media(max-width:800px){
   .main-grid{grid-template-columns:1fr}
   .panel:last-child{border-left:none;border-top:1px solid #0f2a3f}
-  .endpoint-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -113,12 +102,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   <div class="top-bar">
     <div class="status-dot"></div>
     <div class="logo">AI SUPERCOLLIDER</div>
-    <span class="api-pill">REST API</span>
     <div class="status-label" id="statusLabel">SYSTEMS NOMINAL</div>
   </div>
 
   <div class="main-grid">
-    <!-- LEFT -->
     <div class="panel">
       <div class="panel-title">Beam Configuration</div>
       <div class="particle-card">
@@ -179,7 +166,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <button class="collide-btn" id="collideBtn" onclick="fireCollision()">⚡ COLLIDE</button>
     </div>
 
-    <!-- CENTER -->
     <div class="canvas-wrap">
       <canvas id="colliderCanvas" width="520" height="560"></canvas>
       <div class="energy-bar-wrap">
@@ -188,7 +174,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       </div>
     </div>
 
-    <!-- RIGHT -->
     <div class="panel">
       <div class="panel-title">Collision Output</div>
       <div class="stats-grid">
@@ -204,60 +189,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       </div>
       <div class="log-section" id="logSection">
         <div class="log-line">&gt; System online</div>
-        <div class="log-line">&gt; API ready at /api/</div>
+        <div class="log-line">&gt; Standby for collision</div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- API DOCS -->
-<div class="api-docs">
-  <div class="api-title">REST API ENDPOINTS</div>
-  <div class="endpoint-grid">
-    <div class="endpoint-card">
-      <div class="ep-method">POST</div>
-      <div class="ep-path">/api/collide</div>
-      <div class="ep-desc">Run a single collision event. Returns all output particles, energies, quantum numbers, and anomaly score.</div>
-      <div class="ep-example">curl -X POST /api/collide \
-  -H "Content-Type: application/json" \
-  -d '{
-    "beam_a": "proton",
-    "beam_b": "antiproton",
-    "energy_a_tev": 6.5,
-    "energy_b_tev": 6.5,
-    "mode": "ai"
-  }'</div>
-    </div>
-    <div class="endpoint-card">
-      <div class="ep-method">POST</div>
-      <div class="ep-path">/api/batch</div>
-      <div class="ep-desc">Run up to 5000 events and get aggregate statistics: mean multiplicity, particle frequencies, √s distribution.</div>
-      <div class="ep-example">curl -X POST /api/batch \
-  -H "Content-Type: application/json" \
-  -d '{
-    "beam_a": "proton",
-    "beam_b": "proton",
-    "energy_tev": 6.5,
-    "n": 1000,
-    "mode": "physics"
-  }'</div>
-    </div>
-    <div class="endpoint-card">
-      <div class="ep-method">GET</div>
-      <div class="ep-path">/api/particles</div>
-      <div class="ep-desc">Returns the full particle database — charge, mass, spin, baryon number, lepton number for all supported particles.</div>
-      <div class="ep-example">curl /api/particles
-
-# Returns:
-{
-  "proton": {
-    "charge": 1,
-    "mass_gev": 0.938,
-    "spin": 0.5,
-    ...
-  },
-  ...
-}</div>
     </div>
   </div>
 </div>
@@ -369,12 +302,40 @@ function spawnBeam(beam){
   return {x:cx-Math.cos(ang)*220,y:cy-Math.sin(ang)*220,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,color,size:2.5+eVal/7,alpha:1};
 }
 
+// Generate some random simulated particle data
+function mockGenerateParticles(energy) {
+    const particleTypes = [
+        {name: 'photon', spin: 1, charge: 0, mass_gev: 0},
+        {name: 'electron', spin: 0.5, charge: -1, mass_gev: 0.0005},
+        {name: 'positron', spin: 0.5, charge: 1, mass_gev: 0.0005},
+        {name: 'muon', spin: 0.5, charge: -1, mass_gev: 0.105},
+        {name: 'pion_plus', spin: 0, charge: 1, mass_gev: 0.139},
+        {name: 'pion_minus', spin: 0, charge: -1, mass_gev: 0.139},
+        {name: 'Higgs', spin: 0, charge: 0, mass_gev: 125.1},
+        {name: 'Z_boson', spin: 1, charge: 0, mass_gev: 91.2}
+    ];
+    
+    let count = Math.floor(rand(3, 8 + (energy * 0.5)));
+    let output = [];
+    for(let i=0; i<count; i++){
+        let pType = choice(particleTypes);
+        output.push({
+            name: pType.name,
+            energy_tev: rand(0.1, energy * 0.4),
+            spin: pType.spin,
+            charge: pType.charge,
+            mass_gev: pType.mass_gev
+        });
+    }
+    return output;
+}
+
 async function fireCollision(){
   if(state.running) return;
   state.running=true;
   document.getElementById('collideBtn').className='collide-btn running';
   document.getElementById('collideBtn').textContent='◉ COLLIDING...';
-  document.getElementById('statusLabel').textContent='CALLING API...';
+  document.getElementById('statusLabel').textContent='SIMULATING...';
   if(animFrame) cancelAnimationFrame(animFrame);
   beamA=[];beamB=[];resultParticles=[];
 
@@ -388,13 +349,21 @@ async function fireCollision(){
   let phase=0,phaseT=0,apiData=null;
   colFlash=0;
 
-  // Kick off API call while animation runs
-  const apiPromise = fetch('/api/collide',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({beam_a:pA,beam_b:pB,energy_a_tev:eA,energy_b_tev:eB,
-      angle_a_deg:angA,angle_b_deg:angB,mode:state.mode})
-  }).then(r=>r.json()).then(d=>{apiData=d});
+  // Mock API Call
+  const apiPromise = new Promise(resolve => {
+    setTimeout(() => {
+      resolve({
+        particles: mockGenerateParticles(eA + eB),
+        confidence: state.mode === 'ai' ? rand(0.85, 0.99) : null,
+        anomaly_detected: Math.random() > 0.85,
+        anomaly_sigma: rand(3.1, 5.5).toFixed(1),
+        sqrt_s_tev: (2*Math.sqrt(eA*eB)),
+        n_particles: Math.floor(rand(3, 12)),
+        beam_a: pA,
+        beam_b: pB
+      });
+    }, 800);
+  }).then(d => { apiData = d });
 
   function animate(){
     drawBg();drawBeams();phaseT++;
