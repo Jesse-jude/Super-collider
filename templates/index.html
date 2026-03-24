@@ -1,206 +1,897 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Supercollider Terminal</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-        background: #02060c; 
-        color: #7af0ff; 
-        font-family: 'Share Tech Mono', monospace; 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        min-height: 100vh; 
-        padding: 20px;
-    }
-    .shell { 
-        width: 100%; 
-        max-width: 1100px; 
-        background: #050a12; 
-        border: 1px solid #0f2a3f; 
-        border-radius: 8px; 
-        overflow: hidden; 
-        display: flex; 
-        flex-direction: column; 
-    }
-    .top-bar { 
-        background: #0a192f; 
-        padding: 10px 20px; 
-        display: flex; 
-        align-items: center; 
-        border-bottom: 1px solid #0f2a3f; 
-    }
-    .logo { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 2px; color: #00d4ff; }
-    .status { margin-left: auto; font-size: 10px; color: #4a8fa0; }
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
 
-    .main-grid { display: grid; grid-template-columns: 260px 1fr 260px; min-height: 600px; }
-    .panel { padding: 15px; border-right: 1px solid #0f2a3f; display: flex; flex-direction: column; gap: 15px; }
-    .right-panel { border-right: none; border-left: 1px solid #0f2a3f; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Controls */
-    .card { background: #071a2e; border: 1px solid #14375a; padding: 12px; border-radius: 4px; }
-    .label { font-size: 10px; color: #4a8fa0; margin-bottom: 5px; display: block; }
-    select, input[type=range] { width: 100%; margin-top: 5px; background: #02060c; color: #00d4ff; border: 1px solid #0f2a3f; padding: 5px; }
+body { background: transparent; }
 
-    /* The Button */
-    .collide-btn { 
-        background: linear-gradient(180deg, #005a9e 0%, #003a6e 100%);
-        border: 1px solid #00d4ff; 
-        color: #fff; 
-        font-family: 'Orbitron', sans-serif; 
-        padding: 15px; 
-        cursor: pointer; 
-        font-weight: bold;
-        letter-spacing: 2px;
-        transition: 0.2s;
-        margin-top: auto;
-    }
-    .collide-btn:hover { background: #007ace; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
-    .collide-btn:active { transform: scale(0.98); }
+.collider-shell {
+  font-family: 'Share Tech Mono', monospace;
+  background: #050a12;
+  border-radius: 12px;
+  border: 1px solid #0f2a3f;
+  overflow: hidden;
+  color: #7af0ff;
+  min-height: 700px;
+}
 
-    /* Canvas */
-    .viewport { position: relative; background: #010409; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-    canvas { width: 100%; height: 100%; }
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #071520;
+  border-bottom: 1px solid #0f3050;
+}
 
-    /* Stats */
-    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-box { background: #0a192f; padding: 10px; border: 1px solid #0f2a3f; text-align: center; }
-    .stat-val { font-size: 18px; color: #00ff88; font-family: 'Orbitron'; display: block; }
-    .stat-lab { font-size: 9px; color: #4a8fa0; }
+.top-bar .logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #00d4ff;
+  letter-spacing: 2px;
+}
 
-    .log { height: 120px; background: #02060c; border: 1px solid #0f2a3f; padding: 10px; font-size: 10px; overflow-y: auto; color: #2a7a9a; }
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 6px #00ff88;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.status-label { font-size: 10px; color: #4a8fa0; letter-spacing: 1px; }
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr 240px;
+  gap: 0;
+  min-height: 640px;
+}
+
+.panel {
+  padding: 16px;
+  border-right: 1px solid #0f2a3f;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel:last-child { border-right: none; border-left: 1px solid #0f2a3f; }
+
+.panel-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #2a7a9a;
+  text-transform: uppercase;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #0f2a3f;
+}
+
+.particle-card {
+  background: #071a2e;
+  border: 1px solid #0f3050;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.pc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pc-symbol {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.sym-proton { background: #1a3a6e; border: 1px solid #2a6aff; color: #6ab0ff; }
+.sym-electron { background: #3a1a6e; border: 1px solid #aa3aff; color: #cc88ff; }
+.sym-higgs { background: #1a5a2a; border: 1px solid #00ff88; color: #88ffcc; }
+.sym-antiproton { background: #5a1a1a; border: 1px solid #ff3a3a; color: #ff8888; }
+
+.pc-name { font-size: 11px; color: #a0d0e0; }
+.pc-type { font-size: 9px; color: #2a7a9a; }
+
+.param-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.param-label { font-size: 9px; color: #2a7a9a; }
+.param-val { font-size: 10px; color: #00d4ff; }
+
+input[type=range] {
+  width: 100%;
+  height: 3px;
+  -webkit-appearance: none;
+  background: #0f2a3f;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  margin: 4px 0;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #00d4ff;
+  cursor: pointer;
+}
+
+select {
+  width: 100%;
+  background: #071a2e;
+  border: 1px solid #0f3050;
+  color: #7af0ff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.collide-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #003a6e, #005a9e);
+  border: 1px solid #0080ff;
+  color: #00d4ff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  margin-top: auto;
+}
+
+.collide-btn:hover { background: linear-gradient(135deg, #004a8e, #007ace); border-color: #00aaff; }
+.collide-btn:active { transform: scale(0.97); }
+
+.collide-btn.running {
+  animation: pulse-btn 0.5s infinite alternate;
+  background: linear-gradient(135deg, #003a1e, #005a3e);
+  border-color: #00ff88;
+  color: #00ff88;
+}
+
+@keyframes pulse-btn { from{box-shadow: 0 0 0 0 #00ff8840} to{box-shadow: 0 0 12px 4px #00ff8840} }
+
+/* Canvas area */
+.canvas-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #030810;
+  overflow: hidden;
+}
+
+#colliderCanvas {
+  display: block;
+}
+
+.energy-bar-wrap {
+  position: absolute;
+  bottom: 12px;
+  left: 20px; right: 20px;
+}
+
+.energy-label { font-size: 9px; color: #2a7a9a; letter-spacing: 1px; margin-bottom: 3px; }
+
+.energy-bar {
+  height: 4px;
+  background: #0f2a3f;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.energy-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0040ff, #00d4ff, #00ff88);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* Output panel */
+.output-section { display: flex; flex-direction: column; gap: 8px; }
+
+.out-title {
+  font-size: 9px;
+  color: #2a7a9a;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #0f2a3f;
+  padding-bottom: 6px;
+}
+
+.particle-result {
+  background: #071a2e;
+  border: 1px solid #0f3050;
+  border-radius: 4px;
+  padding: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+.pr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.pr-name { font-size: 11px; color: #a0d0e0; }
+.pr-energy { font-size: 10px; color: #00ff88; }
+.pr-bar { height: 2px; background: #0f2a3f; border-radius: 1px; overflow: hidden; margin-bottom: 2px; }
+.pr-fill { height: 100%; border-radius: 1px; }
+.pr-meta { font-size: 9px; color: #2a7a9a; }
+
+.prob-badge {
+  display: inline-block;
+  background: #001a3a;
+  border: 1px solid #0050aa;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 9px;
+  color: #5588ff;
+  margin-left: 4px;
+}
+
+.anomaly-alert {
+  background: #1a0a0a;
+  border: 1px solid #ff3030;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 10px;
+  color: #ff6060;
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.log-section {
+  background: #020810;
+  border: 1px solid #0f2a3f;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 9px;
+  color: #2a7a9a;
+  max-height: 100px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.log-section::-webkit-scrollbar { width: 3px; }
+.log-section::-webkit-scrollbar-thumb { background: #0f3050; border-radius: 2px; }
+
+.log-line { margin-bottom: 2px; line-height: 1.4; }
+.log-line.ok { color: #00ff88; }
+.log-line.warn { color: #ffaa00; }
+.log-line.err { color: #ff4040; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.stat-box {
+  background: #071a2e;
+  border: 1px solid #0f3050;
+  border-radius: 4px;
+  padding: 8px;
+  text-align: center;
+}
+
+.stat-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: #00d4ff;
+  display: block;
+}
+
+.stat-lbl { font-size: 8px; color: #2a7a9a; text-transform: uppercase; letter-spacing: 1px; }
+
+.mode-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.mode-btn {
+  flex: 1;
+  background: #071a2e;
+  border: 1px solid #0f3050;
+  color: #2a7a9a;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  padding: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.mode-btn.active {
+  background: #001a3a;
+  border-color: #0080ff;
+  color: #00d4ff;
+}
 </style>
-</head>
-<body>
 
-<div class="shell">
-    <div class="top-bar">
-        <div class="logo">S-COLLIDER v2.4</div>
-        <div class="status" id="status">SYS_READY</div>
+<div class="collider-shell">
+  <div class="top-bar">
+    <div class="status-dot"></div>
+    <div class="logo">AI SUPERCOLLIDER — v3.14</div>
+    <div style="flex:1"></div>
+    <div class="status-label" id="statusLabel">SYSTEMS NOMINAL</div>
+  </div>
+
+  <div class="main-grid">
+    <!-- LEFT: Particle Config -->
+    <div class="panel">
+      <div class="panel-title">Beam Configuration</div>
+
+      <div class="particle-card">
+        <div class="pc-header">
+          <div class="pc-symbol sym-proton" id="symA">p</div>
+          <div>
+            <div class="pc-name">Beam A</div>
+            <div class="pc-type" id="typeA">Baryon · Fermion</div>
+          </div>
+        </div>
+        <div class="param-row">
+          <span class="param-label">PARTICLE</span>
+        </div>
+        <select id="particleA" onchange="updateParticle('A')">
+          <option value="proton">Proton (p)</option>
+          <option value="electron">Electron (e⁻)</option>
+          <option value="antiproton">Antiproton (p̄)</option>
+          <option value="neutron">Neutron (n)</option>
+          <option value="muon">Muon (μ⁻)</option>
+        </select>
+        <div class="param-row" style="margin-top:8px">
+          <span class="param-label">ENERGY (TeV)</span>
+          <span class="param-val" id="energyAVal">6.5</span>
+        </div>
+        <input type="range" min="0.5" max="14" step="0.5" value="6.5" id="energyA" oninput="updateSlider('A')">
+        <div class="param-row">
+          <span class="param-label">DIRECTION (θ°)</span>
+          <span class="param-val" id="angleAVal">0°</span>
+        </div>
+        <input type="range" min="-15" max="15" step="1" value="0" id="angleA" oninput="updateAngle('A')">
+      </div>
+
+      <div class="particle-card">
+        <div class="pc-header">
+          <div class="pc-symbol sym-antiproton" id="symB">p̄</div>
+          <div>
+            <div class="pc-name">Beam B</div>
+            <div class="pc-type" id="typeB">Antibaryon · Fermion</div>
+          </div>
+        </div>
+        <div class="param-row">
+          <span class="param-label">PARTICLE</span>
+        </div>
+        <select id="particleB" onchange="updateParticle('B')">
+          <option value="antiproton" selected>Antiproton (p̄)</option>
+          <option value="proton">Proton (p)</option>
+          <option value="positron">Positron (e⁺)</option>
+          <option value="neutron">Neutron (n)</option>
+          <option value="antimuon">Antimuon (μ⁺)</option>
+        </select>
+        <div class="param-row" style="margin-top:8px">
+          <span class="param-label">ENERGY (TeV)</span>
+          <span class="param-val" id="energyBVal">6.5</span>
+        </div>
+        <input type="range" min="0.5" max="14" step="0.5" value="6.5" id="energyB" oninput="updateSlider('B')">
+        <div class="param-row">
+          <span class="param-label">DIRECTION (θ°)</span>
+          <span class="param-val" id="angleBVal">180°</span>
+        </div>
+        <input type="range" min="165" max="195" step="1" value="180" id="angleB" oninput="updateAngle('B')">
+      </div>
+
+      <div>
+        <div class="mode-toggle">
+          <div class="mode-btn active" id="modePhys" onclick="setMode('physics')">PHYSICS</div>
+          <div class="mode-btn" id="modeAI" onclick="setMode('ai')">AI MODEL</div>
+        </div>
+      </div>
+
+      <button class="collide-btn" id="collideBtn" onclick="fireCollision()">⚡ COLLIDE</button>
     </div>
-    
-    <div class="main-grid">
-        <div class="panel">
-            <div class="card">
-                <span class="label">BEAM A PARTICLE</span>
-                <select id="pA">
-                    <option value="proton">Proton (p+)</option>
-                    <option value="electron">Electron (e-)</option>
-                </select>
-                <span class="label" style="margin-top:10px">ENERGY (TeV)</span>
-                <input type="range" id="eA" min="1" max="14" value="7">
-            </div>
 
-            <div class="card">
-                <span class="label">BEAM B PARTICLE</span>
-                <select id="pB">
-                    <option value="antiproton">Antiproton (p-)</option>
-                    <option value="positron">Positron (e+)</option>
-                </select>
-                <span class="label" style="margin-top:10px">ENERGY (TeV)</span>
-                <input type="range" id="eB" min="1" max="14" value="7">
-            </div>
-
-            <button class="collide-btn" onclick="startCollision()">⚡ COLLIDE</button>
-        </div>
-
-        <div class="viewport">
-            <canvas id="cvs"></canvas>
-        </div>
-
-        <div class="panel right-panel">
-            <div class="stat-row">
-                <div class="stat-box"><span class="stat-val" id="evCount">0</span><span class="stat-lab">EVENTS</span></div>
-                <div class="stat-box"><span class="stat-val" id="lumi">0.0</span><span class="stat-lab">LUMI</span></div>
-            </div>
-            <div class="log" id="log">> Initializing injectors...<br>> Magnet alignment OK.</div>
-        </div>
+    <!-- CENTER: Canvas -->
+    <div class="canvas-wrap">
+      <canvas id="colliderCanvas" width="520" height="560"></canvas>
+      <div class="energy-bar-wrap">
+        <div class="energy-label">COLLISION ENERGY ■■■</div>
+        <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
+      </div>
     </div>
+
+    <!-- RIGHT: Results -->
+    <div class="panel">
+      <div class="panel-title">Collision Output</div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-val" id="totalEvents">0</span>
+          <span class="stat-lbl">Events</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val" id="totalParticles">0</span>
+          <span class="stat-lbl">Particles</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val" id="sqrtS">13.0</span>
+          <span class="stat-lbl">√s (TeV)</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val" id="anomCount">0</span>
+          <span class="stat-lbl">Anomalies</span>
+        </div>
+      </div>
+
+      <div class="anomaly-alert" id="anomalyAlert">⚠ ANOMALOUS EVENT DETECTED — unexpected particle signature</div>
+
+      <div class="output-section" id="outputSection">
+        <div class="out-title">Resulting Particles</div>
+        <div style="font-size:10px;color:#2a7a9a;padding:8px 0;">Fire a collision to generate output</div>
+      </div>
+
+      <div class="log-section" id="logSection">
+        <div class="log-line">&gt; System initialized</div>
+        <div class="log-line">&gt; Beam A: proton @ 6.5 TeV</div>
+        <div class="log-line">&gt; Beam B: antiproton @ 6.5 TeV</div>
+        <div class="log-line">&gt; Awaiting collision trigger...</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('cvs');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    let animating = false;
+const PARTICLES = {
+  proton:      { sym:'p',   charge:+1, mass:0.938, color:'#2a6aff', fillStyle:'#1a3a6e', type:'Baryon · Fermion', spinColor:'#4488ff' },
+  electron:    { sym:'e⁻',  charge:-1, mass:0.000511, color:'#aa3aff', fillStyle:'#3a1a6e', type:'Lepton · Fermion', spinColor:'#cc66ff' },
+  antiproton:  { sym:'p̄',   charge:-1, mass:0.938, color:'#ff3a3a', fillStyle:'#5a1a1a', type:'Antibaryon · Fermion', spinColor:'#ff6666' },
+  neutron:     { sym:'n',   charge: 0, mass:0.939, color:'#44aaff', fillStyle:'#0a2a4a', type:'Baryon · Fermion', spinColor:'#66ccff' },
+  muon:        { sym:'μ⁻',  charge:-1, mass:0.106, color:'#ffaa00', fillStyle:'#3a2800', type:'Lepton · Fermion', spinColor:'#ffcc44' },
+  positron:    { sym:'e⁺',  charge:+1, mass:0.000511, color:'#ff66cc', fillStyle:'#3a1a3a', type:'Antilepton · Fermion', spinColor:'#ff88dd' },
+  antimuon:    { sym:'μ⁺',  charge:+1, mass:0.106, color:'#ff8800', fillStyle:'#3a1a00', type:'Antilepton · Fermion', spinColor:'#ffaa33' },
+};
 
-    function resize() {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
+const OUTCOMES = {
+  'proton+antiproton': [
+    { name:'W⁺ boson',      sym:'W⁺', color:'#0080ff', pct:22, spin:'1', charge:'+1', mass:'80.4 GeV' },
+    { name:'W⁻ boson',      sym:'W⁻', color:'#ff4040', pct:22, spin:'1', charge:'-1', mass:'80.4 GeV' },
+    { name:'Z⁰ boson',      sym:'Z⁰', color:'#00cc88', pct:18, spin:'1', charge:'0',  mass:'91.2 GeV' },
+    { name:'Higgs boson',   sym:'H',  color:'#ffcc00', pct:8,  spin:'0', charge:'0',  mass:'125 GeV' },
+    { name:'π⁺ pion',       sym:'π⁺', color:'#4488ff', pct:30, spin:'0', charge:'+1', mass:'139 MeV' },
+    { name:'K⁻ kaon',       sym:'K⁻', color:'#ff6688', pct:20, spin:'0', charge:'-1', mass:'494 MeV' },
+    { name:'γ photon',      sym:'γ',  color:'#ffffaa', pct:40, spin:'1', charge:'0',  mass:'0' },
+    { name:'Top quark',     sym:'t',  color:'#ff8800', pct:4,  spin:'½', charge:'+⅔', mass:'173 GeV' },
+    { name:'b quark jet',   sym:'b',  color:'#aa44ff', pct:12, spin:'½', charge:'-⅓', mass:'4.2 GeV' },
+  ],
+  'proton+proton': [
+    { name:'π⁰ pion',       sym:'π⁰', color:'#88aaff', pct:45, spin:'0', charge:'0',  mass:'135 MeV' },
+    { name:'π⁺ pion',       sym:'π⁺', color:'#4488ff', pct:40, spin:'0', charge:'+1', mass:'139 MeV' },
+    { name:'K⁺ kaon',       sym:'K⁺', color:'#ff6699', pct:15, spin:'0', charge:'+1', mass:'494 MeV' },
+    { name:'Higgs boson',   sym:'H',  color:'#ffcc00', pct:3,  spin:'0', charge:'0',  mass:'125 GeV' },
+    { name:'Z⁰ boson',      sym:'Z⁰', color:'#00cc88', pct:6,  spin:'1', charge:'0',  mass:'91.2 GeV' },
+    { name:'gluon jet',     sym:'g',  color:'#ff9900', pct:60, spin:'1', charge:'0',  mass:'0' },
+  ],
+  'electron+positron': [
+    { name:'γ photon',      sym:'γ',  color:'#ffffaa', pct:80, spin:'1', charge:'0',  mass:'0' },
+    { name:'Z⁰ boson',      sym:'Z⁰', color:'#00cc88', pct:20, spin:'1', charge:'0',  mass:'91.2 GeV' },
+    { name:'Higgs boson',   sym:'H',  color:'#ffcc00', pct:5,  spin:'0', charge:'0',  mass:'125 GeV' },
+    { name:'μ⁺μ⁻ pair',     sym:'μ',  color:'#ffaa00', pct:15, spin:'½', charge:'±1', mass:'106 MeV' },
+  ],
+};
+
+function getOutcomeKey(pA, pB) {
+  const annihilation = { 'proton+antiproton':1, 'antiproton+proton':1 };
+  const ee = { 'electron+positron':1, 'positron+electron':1 };
+  const pp = { 'proton+proton':1, 'antiproton+antiproton':1 };
+  const key = pA + '+' + pB;
+  if (annihilation[key]) return 'proton+antiproton';
+  if (ee[key]) return 'electron+positron';
+  if (pp[key]) return 'proton+proton';
+  return 'proton+proton';
+}
+
+let state = { mode:'physics', events:0, totalParticles:0, anomalies:0, running:false };
+
+function updateSlider(beam) {
+  const v = parseFloat(document.getElementById('energy'+beam).value);
+  document.getElementById('energy'+beam+'Val').textContent = v.toFixed(1);
+  const eA = parseFloat(document.getElementById('energyA').value);
+  const eB = parseFloat(document.getElementById('energyB').value);
+  const sqrtS = (2 * Math.sqrt(eA * eB)).toFixed(1);
+  document.getElementById('sqrtS').textContent = sqrtS;
+  document.getElementById('energyFill').style.width = Math.min(100, (eA+eB)/28*100).toFixed(0) + '%';
+}
+
+function updateAngle(beam) {
+  const v = parseInt(document.getElementById('angle'+beam).value);
+  document.getElementById('angle'+beam+'Val').textContent = v + '°';
+}
+
+function updateParticle(beam) {
+  const pName = document.getElementById('particle'+beam).value;
+  const p = PARTICLES[pName];
+  if (!p) return;
+  const sym = document.getElementById('sym'+beam);
+  sym.textContent = p.sym;
+  sym.className = 'pc-symbol';
+  sym.style.background = p.fillStyle;
+  sym.style.border = '1px solid ' + p.color;
+  sym.style.color = p.color;
+  document.getElementById('type'+beam).textContent = p.type;
+}
+
+function setMode(m) {
+  state.mode = m;
+  document.getElementById('modePhys').className = 'mode-btn' + (m==='physics' ? ' active' : '');
+  document.getElementById('modeAI').className = 'mode-btn' + (m==='ai' ? ' active' : '');
+}
+
+const canvas = document.getElementById('colliderCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const cx = W/2, cy = H/2;
+
+let animFrame = null;
+let particles_anim = [];
+let ring_alpha = 0;
+let collision_flash = 0;
+let result_particles = [];
+let beam_particles_a = [];
+let beam_particles_b = [];
+
+function rand(a,b) { return a + Math.random()*(b-a); }
+function choice(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+function drawBg() {
+  ctx.fillStyle = '#030810';
+  ctx.fillRect(0,0,W,H);
+  // Ring
+  ctx.save();
+  ctx.strokeStyle = 'rgba(0,80,150,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, 200, 0, Math.PI*2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,80,150,0.15)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.arc(cx, cy, 180, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, 220, 0, Math.PI*2); ctx.stroke();
+  // Grid lines
+  ctx.strokeStyle = 'rgba(0,60,100,0.2)';
+  ctx.lineWidth = 0.5;
+  for(let i=40;i<W;i+=40){ ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke(); }
+  for(let i=40;i<H;i+=40){ ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke(); }
+  ctx.restore();
+  // Detector segments
+  for(let i=0;i<8;i++){
+    const a = (i/8)*Math.PI*2;
+    const r1=195, r2=225;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,100,180,0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*r1, cy+Math.sin(a)*r1);
+    ctx.lineTo(cx+Math.cos(a)*r2, cy+Math.sin(a)*r2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  // Center dot
+  const grd = ctx.createRadialGradient(cx,cy,0,cx,cy,20);
+  grd.addColorStop(0,'rgba(0,180,255,0.15)');
+  grd.addColorStop(1,'transparent');
+  ctx.fillStyle=grd;
+  ctx.beginPath(); ctx.arc(cx,cy,20,0,Math.PI*2); ctx.fill();
+}
+
+function drawBeams() {
+  const eA = parseFloat(document.getElementById('energyA').value);
+  const eB = parseFloat(document.getElementById('energyB').value);
+  const aA = (parseInt(document.getElementById('angleA').value)||0) * Math.PI/180;
+  const aB = (parseInt(document.getElementById('angleB').value)||180) * Math.PI/180;
+
+  // Beam A trail
+  const gA = ctx.createLinearGradient(cx-220, cy, cx, cy);
+  gA.addColorStop(0,'transparent');
+  gA.addColorStop(1, PARTICLES[document.getElementById('particleA').value]?.color || '#2a6aff');
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = gA;
+  ctx.lineWidth = Math.min(4, 1+eA/4);
+  ctx.beginPath();
+  ctx.moveTo(cx - Math.cos(aA)*220, cy - Math.sin(aA)*220);
+  ctx.lineTo(cx, cy);
+  ctx.stroke();
+  ctx.restore();
+
+  // Beam B trail
+  const gB = ctx.createLinearGradient(cx+220, cy, cx, cy);
+  gB.addColorStop(0,'transparent');
+  gB.addColorStop(1, PARTICLES[document.getElementById('particleB').value]?.color || '#ff3a3a');
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = gB;
+  ctx.lineWidth = Math.min(4, 1+eB/4);
+  ctx.beginPath();
+  ctx.moveTo(cx - Math.cos(aB)*220, cy - Math.sin(aB)*220);
+  ctx.lineTo(cx, cy);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function spawnBeamParticle(beam) {
+  const eVal = parseFloat(document.getElementById('energy'+beam).value);
+  const aVal = (parseInt(document.getElementById('angle'+beam).value)||0) * Math.PI/180;
+  const pName = document.getElementById('particle'+beam).value;
+  const p = PARTICLES[pName];
+  const color = p?.color || '#2a6aff';
+  const speed = 1.5 + eVal/7;
+  const angle = beam==='A' ? aVal : (parseInt(document.getElementById('angleB').value)||180)*Math.PI/180;
+  const startR = 220;
+  return {
+    x: cx - Math.cos(angle)*startR,
+    y: cy - Math.sin(angle)*startR,
+    vx: Math.cos(angle)*speed,
+    vy: Math.sin(angle)*speed,
+    color, alpha:1, size:3+eVal/7, life:1, maxLife:1
+  };
+}
+
+function fireCollision() {
+  if(state.running) return;
+  state.running = true;
+  document.getElementById('collideBtn').className = 'collide-btn running';
+  document.getElementById('collideBtn').textContent = '◉ COLLIDING...';
+  document.getElementById('statusLabel').textContent = 'COLLISION ACTIVE';
+
+  // Clear previous anim
+  if(animFrame) cancelAnimationFrame(animFrame);
+  result_particles = [];
+  beam_particles_a = [];
+  beam_particles_b = [];
+
+  const eA = parseFloat(document.getElementById('energyA').value);
+  const eB = parseFloat(document.getElementById('energyB').value);
+  const pA = document.getElementById('particleA').value;
+  const pB = document.getElementById('particleB').value;
+  const sqrtS = 2*Math.sqrt(eA*eB);
+
+  let phase = 0;
+  let phaseT = 0;
+  collision_flash = 0;
+
+  function animate(t) {
+    drawBg();
+    drawBeams();
+    phaseT++;
+
+    if(phase===0) {
+      // Spawn beam particles marching toward center
+      if(phaseT % 4 === 0) {
+        beam_particles_a.push(spawnBeamParticle('A'));
+        beam_particles_b.push(spawnBeamParticle('B'));
+      }
+      beam_particles_a.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; });
+      beam_particles_b.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; });
+
+      beam_particles_a.forEach(p=>{
+        const d=Math.hypot(p.x-cx,p.y-cy);
+        p.alpha = Math.min(1, d/40);
+        ctx.save();
+        ctx.globalAlpha=p.alpha;
+        ctx.fillStyle=p.color;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+        // glow
+        const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*3);
+        g.addColorStop(0,p.color+'80'); g.addColorStop(1,'transparent');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,p.size*3,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      });
+      beam_particles_b.forEach(p=>{
+        const d=Math.hypot(p.x-cx,p.y-cy);
+        p.alpha = Math.min(1, d/40);
+        ctx.save(); ctx.globalAlpha=p.alpha;
+        ctx.fillStyle=p.color;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      });
+
+      if(phaseT > 60) { phase=1; phaseT=0; collision_flash=1; }
     }
-    window.addEventListener('resize', resize);
-    resize();
 
-    function startCollision() {
-        if(animating) return;
-        animating = true;
-        document.getElementById('status').textContent = "COLLIDING...";
-        particles = [];
-        
-        // Generate collision fragments
-        const count = 20 + Math.random() * 30;
-        for(let i=0; i<count; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 2 + Math.random() * 5;
-            particles.push({
-                x: canvas.width/2,
-                y: canvas.height/2,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                life: 1.0,
-                color: `hsl(${180 + Math.random() * 60}, 100%, 70%)`
-            });
+    if(phase===1) {
+      // BOOM
+      const f = collision_flash;
+      ctx.save();
+      ctx.globalAlpha = f * 0.6;
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,80*f);
+      g.addColorStop(0,'#ffffff');
+      g.addColorStop(0.3,'#00d4ff');
+      g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(cx,cy,120*f,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      collision_flash = Math.min(1, collision_flash + 0.06);
+
+      if(phaseT > 18) {
+        phase=2; phaseT=0;
+        const outKey = getOutcomeKey(pA, pB);
+        const pool = OUTCOMES[outKey] || OUTCOMES['proton+proton'];
+        const totalE = eA + eB;
+        const nOut = 3 + Math.floor(sqrtS/4) + Math.floor(Math.random()*4);
+        const pickedParticles = [];
+        const sorted = [...pool].sort((a,b)=>b.pct-a.pct);
+
+        // Select particles based on probability
+        let energyLeft = totalE * 0.98;
+        for(let i=0; i<nOut && energyLeft>0; i++){
+          const candidates = sorted.filter(p=>Math.random()*100 < p.pct);
+          const cand = candidates.length>0 ? choice(candidates) : sorted[0];
+          const eFrac = rand(0.05, 0.3) * energyLeft;
+          energyLeft -= eFrac;
+          const angle = Math.random()*Math.PI*2;
+          const speed = 0.8 + rand(0,2.5);
+          pickedParticles.push({
+            ...cand,
+            x: cx, y: cy,
+            vx: Math.cos(angle)*speed,
+            vy: Math.sin(angle)*speed,
+            energy: eFrac,
+            alpha: 1,
+            trail: [],
+            life: 200 + Math.random()*100
+          });
         }
-        
-        updateStats();
-        animate();
+        result_particles = pickedParticles;
+        displayResults(pickedParticles, sqrtS, pA, pB);
+        updateStats(pickedParticles.length, sqrtS);
+      }
     }
 
-    function updateStats() {
-        const ev = document.getElementById('evCount');
-        ev.textContent = parseInt(ev.textContent) + 1;
-        const log = document.getElementById('log');
-        log.innerHTML += `<br>> Event detected: ${particles.length} tracks.`;
-        log.scrollTop = log.scrollHeight;
-    }
+    if(phase===2) {
+      let alive = 0;
+      result_particles.forEach(p=>{
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        p.alpha = Math.max(0, p.life/120);
+        p.trail.push({x:p.x,y:p.y});
+        if(p.trail.length > 30) p.trail.shift();
 
-    function animate() {
-        ctx.fillStyle = 'rgba(2, 6, 12, 0.2)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        let alive = false;
-        particles.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life -= 0.015;
-            
-            if(p.life > 0) {
-                alive = true;
-                ctx.beginPath();
-                ctx.strokeStyle = p.color;
-                ctx.globalAlpha = p.life;
-                ctx.lineWidth = 2;
-                ctx.moveTo(p.x - p.vx, p.y - p.vy);
-                ctx.lineTo(p.x, p.y);
-                ctx.stroke();
-            }
-        });
-
-        if(alive) {
-            requestAnimationFrame(animate);
-        } else {
-            animating = false;
-            document.getElementById('status').textContent = "SYS_READY";
+        if(p.alpha > 0.01) {
+          alive++;
+          // Trail
+          ctx.save();
+          for(let i=1;i<p.trail.length;i++){
+            const ta = (i/p.trail.length)*p.alpha*0.5;
+            ctx.globalAlpha = ta;
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p.trail[i-1].x, p.trail[i-1].y);
+            ctx.lineTo(p.trail[i].x, p.trail[i].y);
+            ctx.stroke();
+          }
+          ctx.restore();
+          // Particle dot
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,Math.PI*2); ctx.fill();
+          ctx.restore();
         }
+      });
+      if(alive===0 || phaseT>500) {
+        phase=3;
+        endCollision();
+      }
     }
 
-    // Initial background draw
-    ctx.fillStyle = '#02060c';
-    ctx.fillRect(0,0,canvas.width, canvas.height);
+    if(phase < 3) animFrame = requestAnimationFrame(animate);
+    else drawBg(), drawBeams();
+  }
+
+  animFrame = requestAnimationFrame(animate);
+}
+
+function endCollision() {
+  state.running = false;
+  document.getElementById('collideBtn').className = 'collide-btn';
+  document.getElementById('collideBtn').textContent = '⚡ COLLIDE';
+  document.getElementById('statusLabel').textContent = 'SYSTEMS NOMINAL';
+}
+
+function displayResults(particles, sqrtS, pA, pB) {
+  const sec = document.getElementById('outputSection');
+  const isAnomaly = sqrtS > 11 && Math.random() < 0.2;
+  const modeLabel = state.mode === 'ai' ? '<span class="prob-badge">AI</span>' : '<span class="prob-badge">PHYS</span>';
+
+  let html = '<div class="out-title">Resulting Particles ' + modeLabel + '</div>';
+
+  const maxE = Math.max(...particles.map(p=>p.energy));
+  particles.forEach(p=>{
+    const pct = ((p.energy/maxE)*100).toFixed(0);
+    const conf = (50 + Math.random()*48).toFixed(1);
+    html += `<div class="particle-result">
+      <div class="pr-header">
+        <span class="pr-name">${p.sym} ${p.name}</span>
+        <span class="pr-energy">${p.energy.toFixed(2)} TeV</span>
+      </div>
+      <div class="pr-bar"><div class="pr-fill" style="width:${pct}%;background:${p.color}"></div></div>
+      <div class="pr-meta">spin ${p.spin} · Q=${p.charge} · m=${p.mass} · conf ${conf}%</div>
+    </div>`;
+  });
+
+  sec.innerHTML = html;
+
+  const anom = document.getElementById('anomalyAlert');
+  if(isAnomaly){
+    anom.style.display='block';
+    state.anomalies++;
+    document.getElementById('anomCount').textContent = state.anomalies;
+    log('⚠ Anomalous cross-section detected at √s=' + sqrtS.toFixed(1) + ' TeV', 'warn');
+  } else {
+    anom.style.display='none';
+  }
+}
+
+function updateStats(nP, sqrtS) {
+  state.events++;
+  state.totalParticles += nP;
+  document.getElementById('totalEvents').textContent = state.events;
+  document.getElementById('totalParticles').textContent = state.totalParticles;
+  document.getElementById('sqrtS').textContent = sqrtS.toFixed(1);
+  const pA = document.getElementById('particleA').value;
+  const pB = document.getElementById('particleB').value;
+  log(`Event #${state.events}: ${pA}+${pB} → ${nP} particles · √s=${sqrtS.toFixed(1)} TeV`, state.mode==='ai' ? 'ok' : '');
+}
+
+function log(msg, cls='') {
+  const sec = document.getElementById('logSection');
+  const div = document.createElement('div');
+  div.className = 'log-line ' + cls;
+  div.textContent = '> ' + msg;
+  sec.appendChild(div);
+  sec.scrollTop = sec.scrollHeight;
+  // trim
+  while(sec.children.length > 20) sec.removeChild(sec.firstChild);
+}
+
+// Init canvas
+drawBg(); drawBeams();
+updateSlider('A'); updateSlider('B');
+
+// Gently animate beam sparks at rest
+function idleAnimate() {
+  drawBg(); drawBeams();
+  if(!state.running) requestAnimationFrame(idleAnimate);
+}
+idleAnimate();
 </script>
-</body>
-</html>
